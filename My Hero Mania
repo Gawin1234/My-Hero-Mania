@@ -1,0 +1,364 @@
+local ply = game.Players.LocalPlayer
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local White_List = loadstring(game:HttpGet("https://pastebin.com/raw/UfUPFPgR", true))()
+
+OrionLib:MakeNotification({
+	Name = "Welcome",
+	Content = "Loading ui and Checking data",
+	Image = "rbxassetid://9284228562",
+	Time = 5
+})
+wait(2)
+local inWL = false
+for i,v in pairs(White_List) do
+if v == ply.UserId then
+inWL = true
+end
+end
+if inWL == true then
+
+OrionLib:MakeNotification({
+	Name = "Verify",
+	Content = "Success to Verify!",
+	Image = "rbxassetid://9284228562",
+	Time = 5
+})
+
+local Window = OrionLib:MakeWindow({Name = [[<b><font color="rgb(255,255,150)">Golden</font> <font color="rgb(255,0,0)">Devil</font></b> <font color="rgb(200,200,200)">Hub</font>]], HidePremium = false, SaveConfig = true, ConfigFolder = "OrionMain"})
+
+local Tab1 = Window:MakeTab({
+	Name = "Farm",
+	Icon = "rbxassetid://8304952726",
+	PremiumOnly = false
+})
+
+local Tab2 = Window:MakeTab({
+	Name = "Attack",
+	Icon = "rbxassetid://8304952726",
+	PremiumOnly = false
+})
+
+local Quest_Name = "This is Full Auto Farm"
+local One_For_All = false
+local Skill = false
+local Full_Auto_Farm = false
+local Skill_List = {
+Skill1 = false,
+Skill2 = false,
+Skill3 = false,
+Skill4 = false,
+Skill5 = false,
+}
+local Hop_Distance = 5
+local Auto_Equip = false
+local Auto_Attack = false
+local Auto_Farm = false
+local Monster_Farm = "None"
+local Auto_Use_Skill_on_Spawn = false
+local Skill_Use_on_Spawn = 1
+local Auto_Quest = false
+local Sel_Quest = "None"
+
+Tab1:AddToggle({
+	Name = "Full Auto Farm",
+	Default = false,
+	Callback = function(Value)
+		Full_Auto_Farm = Value
+	end    
+})
+
+Tab1:AddToggle({
+	Name = "Auto Farm",
+	Default = false,
+	Callback = function(Value)
+		Auto_Farm = Value
+	end
+})
+
+local Monsters_List = {}
+
+for i,v in pairs(game.ReplicatedStorage.Package.Quests:GetChildren()) do
+table.insert(Monsters_List, v.Target.Value)
+end
+
+Tab1:AddDropdown({
+	Name = "Monster",
+	Default = "None",
+	Options = Monsters_List,
+	Callback = function(Value)
+		Monster_Farm = Value
+	end    
+})
+
+Tab1:AddSlider({
+	Name = "Distance",
+	Min = 0,
+	Max = 20,
+	Default = 5,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	ValueName = "Stud",
+	Callback = function(Value)
+		Hop_Distance = Value
+	end    
+})
+
+Tab1:AddToggle({
+	Name = "Auto Quest",
+	Default = false,
+	Callback = function(Value)
+		Auto_Quest = Value
+	end
+})
+
+local Quest_List = {}
+
+for i,v in pairs(game.ReplicatedStorage.Package.Quests:GetChildren()) do
+table.insert(Quest_List, v.Name)
+end
+
+Tab1:AddDropdown({
+	Name = "Quest",
+	Default = "None",
+	Options = Quest_List,
+	Callback = function(Value)
+		Sel_Quest = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Auto Attack",
+	Default = false,
+	Callback = function(Value)
+		Auto_Attack = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Auto Equip",
+	Default = false,
+	Callback = function(Value)
+		Auto_Equip = Value
+	end    
+})
+
+Tab2:AddParagraph("Auto Equip","Will equip each time you respawn.")
+
+Tab2:AddToggle({
+	Name = "Auto Use Skill",
+	Default = false,
+	Callback = function(Value)
+		Auto_Use_Skill_on_Spawn = Value
+	end    
+})
+
+Tab2:AddDropdown({
+	Name = "Skill to use",
+	Default = 1,
+	Options = {1 ,2 ,3 ,4 ,5},
+	Callback = function(Value)
+		Skill_Use_on_Spawn = Value
+	end    
+})
+
+Tab2:AddParagraph("Auto Use Skill","Will use the skill every time you respawn.")
+
+Tab2:AddToggle({
+	Name = "Auto Skill",
+	Default = false,
+	Callback = function(Value)
+		Skill = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Skill 1",
+	Default = false,
+	Callback = function(Value)
+		Skill_List.Skill1 = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Skill 2",
+	Default = false,
+	Callback = function(Value)
+		Skill_List.Skill2 = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Skill 3",
+	Default = false,
+	Callback = function(Value)
+		Skill_List.Skill3 = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Skill 4",
+	Default = false,
+	Callback = function(Value)
+		Skill_List.Skill4 = Value
+	end    
+})
+
+Tab2:AddToggle({
+	Name = "Skill 5",
+	Default = false,
+	Callback = function(Value)
+		Skill_List.Skill5 = Value
+	end    
+})
+
+local Sel_NPC = nil
+local char = ply.Character
+local tweenService = game:GetService("TweenService")
+local CanTween = true
+local CanUseSkill = true
+local Punch_Cooldown = false
+
+function FindQuest()
+local QuestList = {}
+local HightlvlList = {}
+for i,v in pairs(game.ReplicatedStorage.Package.Quests:GetChildren()) do
+if v.Alignment.Value == game.ReplicatedStorage.Datas:FindFirstChild(ply.UserId).Alignment.Value or v.Alignment.Value == "All" then
+table.insert(QuestList, v)
+end
+end
+for i,v in pairs(QuestList) do
+if v.Requirement.Value <= game.ReplicatedStorage.Datas:FindFirstChild(ply.UserId).Level.Value then
+table.insert(HightlvlList, v)
+end
+end
+local Sel_Quset = "None"
+local old_lvl = 0
+for i,v in pairs(HightlvlList) do
+if Sel_Quset == "None" then
+Sel_Quset = v.Name
+old_lvl = v.Requirement.Value
+elseif v.Requirement.Value > old_lvl then
+Sel_Quset = v.Name
+old_lvl = v.Requirement.Value
+end
+end
+return Sel_Quset
+end
+
+function Hope_Attack(char)
+if char:FindFirstChild("HumanoidRootPart") then
+if not Sel_NPC:FindFirstChild("HumanoidRootPart") then
+Sel_NPC = nil
+end
+if (char.HumanoidRootPart.Position - Sel_NPC.HumanoidRootPart.Position).Magnitude < 20 then
+char.HumanoidRootPart.CFrame = Sel_NPC.HumanoidRootPart.CFrame + (Sel_NPC.HumanoidRootPart.CFrame.LookVector * -Hop_Distance)
+if Auto_Attack and not Punch_Cooldown then
+Punch_Cooldown = true
+for i=1,5 do
+game:GetService("ReplicatedStorage").Package.Events.Combat:FireServer(i, Sel_NPC.HumanoidRootPart.CFrame)
+end
+delay(.1,function()
+Punch_Cooldown = false
+end)
+end
+if Skill and CanUseSkill then
+CanUseSkill = false
+if Skill_List.Skill1 then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(1, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+wait(.1)
+if Skill_List.Skill2 then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(2, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+wait(.1)
+if Skill_List.Skill3 then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(3, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+wait(.1)
+if Skill_List.Skill4 then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(4, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+wait(.1)
+if Skill_List.Skill5 then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(5, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+wait(.1)
+CanUseSkill = true
+end
+else
+if CanTween == true then
+CanTween = false
+local Tween = tweenService:Create(ply.Character.HumanoidRootPart,TweenInfo.new((ply.Character.HumanoidRootPart.Position - Sel_NPC.HumanoidRootPart.Position).Magnitude / 100,Enum.EasingStyle.Linear ,Enum.EasingDirection.Out ,0 ,false ,0),{CFrame = Sel_NPC.HumanoidRootPart.CFrame + Vector3.new(5)})Tween:Play()
+wait((ply.Character.HumanoidRootPart.Position - Sel_NPC.HumanoidRootPart.Position).Magnitude / 100)
+CanTween = true
+end
+end
+end
+if Sel_NPC.Humanoid.Health <= 0 then
+Sel_NPC = nil
+end
+end
+
+ply.CharacterAdded:Connect(function()
+wait(3)
+CanTween = true
+if Auto_Equip then
+game:GetService("ReplicatedStorage").Package.Events.EquipUnequip:InvokeServer()
+end
+if Auto_Use_Skill_on_Spawn then
+game:GetService("ReplicatedStorage").Package.Events.Skill:InvokeServer(Skill_Use_on_Spawn, "Down", {["MouseHit"] = Sel_NPC.HumanoidRootPart.CFrame, ["Mobile"] = false})
+end
+end)
+
+game:GetService("RunService").Stepped:Connect(function()
+char = ply.Character
+if char.Humanoid.Health <= 0 then
+CanTween = false
+end
+if game.ReplicatedStorage.Datas:FindFirstChild(ply.UserId) then
+if game.ReplicatedStorage.Datas:FindFirstChild(ply.UserId).Quest.Value == "None" then
+if Full_Auto_Farm then
+Quest_Name = FindQuest()
+game:GetService("ReplicatedStorage").Package.Events.GetQuest:InvokeServer(Quest_Name)
+elseif Auto_Quest and game.ReplicatedStorage.Package.Quests:FindFirstChild(Sel_Quest) then
+game:GetService("ReplicatedStorage").Package.Events.GetQuest:InvokeServer(Sel_Quest)
+end
+else
+if Sel_NPC == nil then
+for i,v in pairs(game.Workspace.Living:GetChildren()) do
+if v ~= char and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+if Full_Auto_Farm then
+if v.Name == game.ReplicatedStorage.Package.Quests:FindFirstChild(game.ReplicatedStorage.Datas:FindFirstChild(ply.UserId).Quest.Value).Target.Value then
+Sel_NPC = v
+end
+elseif Auto_Farm and v.Name == Monster_Farm then
+Sel_NPC = v
+end
+end
+end
+elseif char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+if Full_Auto_Farm or Auto_Farm then
+Hope_Attack(char)
+end
+end
+end
+end
+end)
+
+local VirtualUser=game:service'VirtualUser'
+game:service'Players'.LocalPlayer.Idled:connect(function()
+VirtualUser:CaptureController()
+VirtualUser:ClickButton2(Vector2.new())
+wait(2)
+end)
+
+else
+
+OrionLib:MakeNotification({
+	Name = "Verify",
+	Content = "You not have White List!",
+	Image = "rbxassetid://9284228562",
+	Time = 5
+})
+
+end
